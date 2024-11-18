@@ -30,7 +30,7 @@
       </div>
       <div class="p-12 bg-gray-200 rounded-2xl col-span-5 h-full">
         <h3 text-lg>Your goal today:</h3>
-        <h3 class="text-6xl font-bold text-[#27316A]">{{ goal }}mL</h3>
+        <h3 class="text-6xl font-bold text-[#27316A]">{{ goal }} mL</h3>
         <input
           type="number"
           v-model.number="newGoal"
