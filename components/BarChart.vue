@@ -1,76 +1,31 @@
 <template>
-    <div>
-        <!-- <canvas id="bar-chart"></canvas> -->
-        <Bar2 :value="barChartData" />
+  <div class="flex gap-4">
+    <div
+      v-for="i in 14"
+      :key="i"
+      class="relative bg-[#D9D9D9] rounded-md h-40 w-full flex flex-col-reverse"
+    >
+      <div
+        class="relative w-full bg-[#27316A] bottom-0 rounded-md"
+        :style="{ height: (value[i] / goal) * 100 + '%' }"
+      ></div>
     </div>
+  </div>
 </template>
 
-<script>
-import Bar2 from './BarChart1.vue';
-import { Chart, registerables } from 'chart.js';
-import barChartData from "../data/chart-data";
+<script lang="ts">
+import { defineProps } from "vue";
 
 export default {
-    name: "BarChart",
-    data() {
-        return {
-            barChartData
-        }
+  props: {
+    value: {
+      type: Object,
+      required: true,
     },
-    async mounted() {
-        const ctx = document.getElementById("bar-chart");
-        Chart.register(...registerables);
-
-            // const data = ref(null);
-    const url = "https://192.168.123.16/api/sensor-data";
-
-    let data = await $fetch(url, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-          retry: 0, // Disable retries
-    });
-
-
-    const currentDate = new Date();
-        const pastDate = new Date();
-        pastDate.setDate(currentDate.getDate() - 14);
-
-    const filteredData = data.filter((item) => {
-        const itemDate = new Date(item.date);
-        return itemDate >= pastDate && itemDate <= currentDate;
-    });
-
-    const combinedData = Array(14).fill(0);
-    filteredData.forEach((item) => {
-        const itemDate = new Date(item.date);
-        const dayIndex = Math.floor((currentDate.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24));
-        combinedData[13 - dayIndex] += parseFloat(item.weight);
-    });
-
-    console.log(combinedData);
-    this.barChartData = combinedData
-
-    // values = data.value.map(() => {
-        
-    // })
-    // const fetchData = async () => {
-    //   try {
-    //     data.value = await $fetch(url, {
-    //       method: "GET",
-    //       headers: {
-    //         Accept: "application/json",
-    //       },
-    //       retry: 0, // Disable retries
-    //     });
-    //     console.log(data);
-    //   } catch (error) {
-    //     console.error("Error fetching data:", error);
-    //   }
-    // };
-    //     new Chart(ctx, this.barChartData);
-    }
+    goal: {
+      type: Number,
+      required: true,
+    },
+  },
 };
 </script>
-

@@ -2,8 +2,8 @@
   <div class="flex justify-center items-center min-h-screen">
     <div class="grid grid-cols-12 gap-4 w-full max-w-screen-lg">
       <div class="flex flex-row gap-2 rounded-2xl col-span-12">
-        <img src="~/assets/StatusSymbolGreen.svg" />
-        <p>Connected</p>
+       
+        <Bluetooth />
       </div>
       <div
         class="p-12 flex flex-row justify-between items-center bg-gray-200 rounded-2xl col-span-7 h-40"
@@ -53,7 +53,7 @@
           Your progress the last two weeks:
         </h3>
         <!-- <p>{{ totalWeights }}</p> -->
-        <BarChart1 :value="totalWeights" :goal="goal" />
+        <BarChart :value="totalWeights" :goal="goal" />
       </div>
     </div>
   </div>
