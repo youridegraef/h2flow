@@ -1,7 +1,9 @@
 <template>
   <div class="flex items-center space-x-4">
-    <div v-if="status == 'Status: Disconnected'">
-        <img src="~/assets/StatusSymbolGreen.svg" />
+    <div class="flex flex-row gap-2">
+        <img v-if="status == 'Status: Disconnected'" src="~/assets/StatusSymbolRed.svg" />
+        <img v-else="status == 'Status: Connected'" src="~/assets/StatusSymbolGreen.svg" />
+        <img v-else="" src="~/assets/StatusSymbolOrange.svg" />
         <p>{{ status }}</p>
     </div>
     <button class="bg-blue-700 px-6 py-1 rounded-lg text-white uppercase" @click="connect">Connect</button>
