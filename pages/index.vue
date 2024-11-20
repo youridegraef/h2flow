@@ -2,7 +2,6 @@
   <div class="flex justify-center items-center min-h-screen">
     <div class="grid grid-cols-12 gap-4 w-full max-w-screen-lg">
       <div class="flex flex-row gap-2 rounded-2xl col-span-12">
-       
         <Bluetooth />
       </div>
       <div
@@ -26,7 +25,7 @@
       </div>
       <div class="p-12 flex flex-col gap-4 bg-gray-200 rounded-2xl col-span-7">
         <h3 class="font-semibold text-3xl">Your progress today:</h3>
-        <ProgressBar :value="totalWeights" :goal="goal" />
+        <ProgressBar :value="todayWeight" :goal="goal" />
       </div>
       <div class="p-12 bg-gray-200 rounded-2xl col-span-5 h-full">
         <h3 text-lg>Your goal today:</h3>
@@ -52,8 +51,7 @@
         <h3 class="font-semibold text-3xl">
           Your progress the last two weeks:
         </h3>
-        <!-- <p>{{ totalWeights }}</p> -->
-        <BarChart :value="totalWeights" :goal="goal" />
+        <BarChart :value="last14DaysWeights" :goal="goal" />
       </div>
     </div>
   </div>
@@ -65,23 +63,23 @@ import { defineComponent, onMounted, ref, computed } from "vue";
 export default defineComponent({
   setup() {
     interface SensorData {
+      id: number;
       user_id: number;
-      date: string;
       weight: string;
+      date: string;
     }
     interface UserData {
       id: number;
       name: string;
-      weight: number; // Assume bodyweight is in kilograms
+      weight: number;
     }
 
     const userData = ref<UserData[]>([]);
     const data = ref<SensorData[]>([]);
-    const name = ref(""); // Variable for the user's name
-    const goal = ref(0); // Default goal
-    const newGoal = ref(0); // Value from the input field
-
-    let userId = 1; // Set the user_id to filter by
+    const name = ref("");
+    const goal = ref(0);
+    const newGoal = ref(0);
+    const userId = 1;
 
     const url = "https://192.168.123.16/api/sensor-data";
     const usersUrl = "https://192.168.123.16/api/users";
@@ -93,8 +91,9 @@ export default defineComponent({
           headers: {
             Accept: "application/json",
           },
-          retry: 0, // Disable retries
+          retry: 0,
         });
+        console.log("Data fetched:", data.value);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -107,54 +106,75 @@ export default defineComponent({
           headers: {
             Accept: "application/json",
           },
-          retry: 0, // Disable retries
+          retry: 0,
         });
-        const user = userData.value.find((user) => user.id == userId);
+        const user = userData.value.find((user) => user.id === userId);
         if (user) {
-          name.value = user.name; // Set the name from user data
-          goal.value = user.weight * 35; // 35ml per kg
+          name.value = user.name;
+          goal.value = user.weight * 35;
         } else {
           console.error("User data not found for id:", userId);
-        } 
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
-    const totalWeights = computed(() => {
-      // const userId = 1; // Set the user_id to filter by
-      const grouped = data.value
-        .filter((item) => item.user_id === userId) // Filter by user_id
-        .reduce(
-          (
-            acc: Record<string, number>,
-            item: { date: string; weight: string }
-          ) => {
-            if (!acc[item.date]) {
-              acc[item.date] = 0;
-            }
-            acc[item.date] += parseInt(item.weight, 10);
-            return acc;
-          },
-          {}
-        );
-      return Object.values(grouped); // Extract only the total weights
+    const groupedWeights = computed(() => {
+      return data.value
+        .filter((item) => item.user_id === userId) // Filter for the current user
+        .reduce((acc: Record<string, number>, item) => {
+          // Normalize the date to 'YYYY-MM-DD'
+          const normalizedDate = item.date.split(" ")[0]; // Extract date part
+          if (!acc[normalizedDate]) {
+            acc[normalizedDate] = 0;
+          }
+          acc[normalizedDate] += parseInt(item.weight, 10); // Sum up weights
+          return acc;
+        }, {});
+    });
+
+    const todayWeight = computed(() => {
+      const today = new Date().toISOString().split("T")[0]; // Get today's date
+      return groupedWeights.value[today] || 0; // Return today's total weight or 0
+    });
+
+    const last14DaysWeights = computed(() => {
+      const dates = [...Array(14).keys()]
+        .map((daysAgo) => {
+          const date = new Date();
+          date.setDate(date.getDate() - daysAgo); // Subtract days
+          return date.toISOString().split("T")[0]; // Normalize to 'YYYY-MM-DD'
+        })
+        .reverse(); // Ensure chronological order
+      return dates.map((date) => groupedWeights.value[date] || 0); // Map to weights or 0
     });
 
     const updateGoal = () => {
       if (newGoal.value > 0) {
-        goal.value = newGoal.value; // Convert to milliliters if needed
+        goal.value = newGoal.value;
       }
     };
-    
+
     onMounted(() => {
       fetchData();
       fetchUserData();
+
+      const interval = setInterval(() => {
+        fetchData();
+        fetchUserData();
+      }, 10000); // 10 seconds
+
+      // Clear interval on unmount
+      onUnmounted(() => {
+        clearInterval(interval);
+      });
     });
 
     return {
       data,
-      totalWeights,
+      todayWeight,
+      last14DaysWeights,
       goal,
       newGoal,
       updateGoal,

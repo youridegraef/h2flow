@@ -3,26 +3,40 @@
     <div class="relative bg-[#D9D9D9] rounded-md w-full h-10 flex flex-row">
       <div
         class="relative h-full bg-[#27316A] rounded-md"
-        :style="{ width: (value[1] / goal) * 100 + '%' }"
+        :style="{ width: (value / goal) * 100 + '%' }"
       ></div>
     </div>
+    <p class="font-semibold">{{ value }} / {{ goal }} mL</p>
   </div>
-
-  <p class="font-semibold">{{ value[1] }} / {{ goal }} mL</p>
 </template>
+
 <script lang="ts">
-import { defineProps } from "vue";
+import { defineProps, watch } from "vue";
 
 export default {
   props: {
     value: {
-      type: Object,
+      type: Number,
       required: true,
     },
     goal: {
       type: Number,
       required: true,
     },
+  },
+  setup(props) {
+    watch(
+      () => props.value,
+      (newValue) => {
+        console.log("Updated value:", newValue);
+      }
+    );
+    watch(
+      () => props.goal,
+      (newGoal) => {
+        console.log("Updated goal:", newGoal);
+      }
+    );
   },
 };
 </script>
